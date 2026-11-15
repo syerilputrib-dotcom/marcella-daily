@@ -1379,23 +1379,40 @@
       }
     }
 
-    async function saveData(msg = 'Tersimpan! 🍵') {
+        async function saveData(msg = 'Tersimpan! 🍵') {
+      // 1. Simpan ke memori HP/laptop dulu agar tampilan langsung berubah instan
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-      renderAll();
-      if (msg) showToast('Menyimpan online... ⏳');
+      if (typeof renderAll === 'function') renderAll();
 
+      // Fungsi bantu aman untuk notifikasi agar tidak pernah bikin website macet
+      const kirimNotif = (teks) => {
+        if (typeof showToast === 'function' && teks) {
+          showToast(teks);
+        }
+      };
+
+      if (msg) kirimNotif('Menyimpan online... ⏳');
+
+      // 2. Kirim data ke Firebase dengan pengecekan status server
       try {
-        await fetch(DATABASE_URL, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
+        const respon = await fetch(DATABASE_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(appData)
         });
-        if (msg) showToast(msg);
+
+        // Cek apakah Firebase menerima atau menolak data (misal: test mode habis)
+        if (!respon.ok) {
+          throw new Error(`Server menolak akses (Kode: ${respon.status})`);
+        }
+
+        if (msg) kirimNotif(msg);
       } catch (e) {
         console.error('Gagal menyimpan ke Firebase:', e);
-        if (msg) showToast('Tersimpan lokal saja ⚠️');
+        if (msg) kirimNotif('Tersimpan lokal saja ⚠️');
       }
     }
+
 
 
     // ================= NAVIGATION =================
