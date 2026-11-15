@@ -1411,12 +1411,12 @@
         <br>2. Buka <strong>SQL Editor</strong> lalu jalankan perintah ini:
       </p>
 
-      <pre style="background:#f4f7f2; border:1px solid var(--matcha-200); padding:10px; border-radius:10px; font-size:0.74rem; overflow-x:auto; margin-bottom:12px; color:#2b3d24;">create table if not exists matcha_hub (
+      <pre style="background:#f4f7f2; border:1px solid var(--matcha-200); padding:10px; border-radius:10px; font-size:0.74rem; overflow-x:auto; margin-bottom:12px; color:#2b3d24;">create table if not exists ella_daily (
   id text primary key,
   payload jsonb not null,
   updated_at timestamptz default now()
 );
-alter table matcha_hub disable row level security;</pre>
+alter table ella_daily disable row level security;</pre>
 
       <div class="input-group" style="margin-bottom:10px;">
         <label>Project URL (Supabase Settings → API)</label>
@@ -1442,8 +1442,8 @@ alter table matcha_hub disable row level security;</pre>
     const DEFAULT_SUPABASE_URL = ""; // Tempel URL Supabase kamu di sini jika mau permanen
     const DEFAULT_SUPABASE_KEY = ""; // Tempel Anon Key Supabase kamu di sini jika mau permanen
     const ROW_ID = "shared_workspace_main";
-    const LOCAL_CACHE_KEY = "matcha_hub_cloud_cache_v2";
-    const CONFIG_KEY = "matcha_hub_sb_config";
+    const LOCAL_CACHE_KEY = "ella_daily_cloud_cache_v2";
+    const CONFIG_KEY = "ella_daily_sb_config";
 
     let supabaseClient = null;
     let isCloudConnected = false;
@@ -1520,8 +1520,8 @@ alter table matcha_hub disable row level security;</pre>
 
         // Subscribe to real-time changes from anyone
         supabaseClient
-          .channel("public:matcha_hub")
-          .on("postgres_changes", { event: "*", schema: "public", table: "matcha_hub", filter: `id=eq.${ROW_ID}` }, (payload) => {
+          .channel("public:ella_daily")
+          .on("postgres_changes", { event: "*", schema: "public", table: "ella_daily", filter: `id=eq.${ROW_ID}` }, (payload) => {
             if (payload.new && payload.new.payload) {
               appData = { ...appData, ...payload.new.payload };
               localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(appData));
@@ -1544,7 +1544,7 @@ alter table matcha_hub disable row level security;</pre>
         return;
       }
       const { data, error } = await supabaseClient
-        .from("matcha_hub")
+        .from("ella_daily")
         .select("payload")
         .eq("id", ROW_ID)
         .maybeSingle();
@@ -1552,7 +1552,7 @@ alter table matcha_hub disable row level security;</pre>
       if (error) {
         console.error(error);
         updateSyncIndicator(false, "Error Tabel DB");
-        if (notify) showToast("Error: Pastikan tabel matcha_hub sudah dibuat");
+        if (notify) showToast("Error: Pastikan tabel ella_daily sudah dibuat");
         return;
       }
 
@@ -1575,7 +1575,7 @@ alter table matcha_hub disable row level security;</pre>
       if (!supabaseClient) return;
 
       const { error } = await supabaseClient
-        .from("matcha_hub")
+        .from("ella_daily")
         .upsert({
           id: ROW_ID,
           payload: appData,
