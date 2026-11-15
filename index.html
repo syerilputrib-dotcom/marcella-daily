@@ -1322,6 +1322,7 @@
   <script>
     // ================= STATE & STORAGE =================
     const STORAGE_KEY = 'matcha_study_hub_v1';
+    const DATABASE_URL = "https://ella-daily-default-rtdb.asia-southeast1.firebasedatabase.app/ella_daily.json"
 
     let appData = {
       kuliah: [
@@ -1353,29 +1354,49 @@
     let currentLinkFilter = 'Semua';
     let currentSemFilter = 'Semua';
 
-    function loadData() {
+        const DATABASE_URL = "https://ella-daily-default-rtdb.asia-southeast1.firebasedatabase.app/ella_daily.json";
+
+    async function loadData() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
           appData = { ...appData, ...JSON.parse(saved) };
         } catch (e) {
-          console.error('Gagal memuat data:', e);
+          console.error('Gagal memuat data lokal:', e);
         }
+      }
+
+      try {
+        const respon = await fetch(DATABASE_URL);
+        const dataOnline = await respon.json();
+        if (dataOnline) {
+          appData = { ...appData, ...dataOnline };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+          renderAll();
+        }
+      } catch (e) {
+        console.error('Gagal memuat data dari Firebase:', e);
       }
     }
 
-    function saveData(msg = 'Tersimpan! 🍵') {
+    async function saveData(msg = 'Tersimpan! 🍵') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
       renderAll();
-      if (msg) showToast(msg);
+      if (msg) showToast('Menyimpan online... ⏳');
+
+      try {
+        await fetch(DATABASE_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(appData)
+        });
+        if (msg) showToast(msg);
+      } catch (e) {
+        console.error('Gagal menyimpan ke Firebase:', e);
+        if (msg) showToast('Tersimpan lokal saja ⚠️');
+      }
     }
 
-    function showToast(text) {
-      const t = document.getElementById('toast');
-      t.textContent = text;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2200);
-    }
 
     // ================= NAVIGATION =================
     function switchPage(pageId, btnEl) {
