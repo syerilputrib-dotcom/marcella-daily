@@ -1354,24 +1354,16 @@
     let currentSemFilter = 'Semua';
 
     const DATABASE_URL = "https://ella-daily-default-rtdb.asia-southeast1.firebasedatabase.app/ella_daily.json";
-
+    
     async function loadData() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          appData = { ...appData, ...JSON.parse(saved) };
-        } catch (e) {
-          console.error('Gagal memuat data lokal:', e);
-        }
-      }
-
       try {
-        const respon = await fetch(DATABASE_URL);
+        // Tambahkan ?t=... agar browser HP maupun PC SELALU mengambil data terbaru (anti-cache)
+        const respon = await fetch(`${DATABASE_URL}?t=${Date.now()}`);
         if (!respon.ok) throw new Error('Gagal akses server');
+        
         const dataOnline = await respon.json();
         if (dataOnline) {
           appData = { ...appData, ...dataOnline };
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
           if (typeof renderAll === 'function') renderAll();
         }
       } catch (e) {
@@ -1380,7 +1372,6 @@
     }
 
     async function saveData(msg = 'Tersimpan! 🍵') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
       if (typeof renderAll === 'function') renderAll();
 
       const kirimNotif = (teks) => {
@@ -1405,7 +1396,7 @@
         if (msg) kirimNotif(msg);
       } catch (e) {
         console.error('Gagal menyimpan ke Firebase:', e);
-        if (msg) kirimNotif('Tersimpan lokal saja ⚠️');
+        if (msg) kirimNotif('Gagal terhubung ke Firebase ⚠️');
       }
     }
 
