@@ -1322,7 +1322,6 @@
   <script>
     // ================= STATE & STORAGE =================
     const STORAGE_KEY = 'matcha_study_hub_v1';
-    const DATABASE_URL = "https://ella-daily-default-rtdb.asia-southeast1.firebasedatabase.app/ella_daily.json"
 
     let appData = {
       kuliah: [
@@ -1354,66 +1353,29 @@
     let currentLinkFilter = 'Semua';
     let currentSemFilter = 'Semua';
 
-        const DATABASE_URL = "https://ella-daily-default-rtdb.asia-southeast1.firebasedatabase.app/ella_daily.json";
-
-    async function loadData() {
+    function loadData() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
           appData = { ...appData, ...JSON.parse(saved) };
         } catch (e) {
-          console.error('Gagal memuat data lokal:', e);
+          console.error('Gagal memuat data:', e);
         }
-      }
-
-      try {
-        const respon = await fetch(DATABASE_URL);
-        const dataOnline = await respon.json();
-        if (dataOnline) {
-          appData = { ...appData, ...dataOnline };
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-          renderAll();
-        }
-      } catch (e) {
-        console.error('Gagal memuat data dari Firebase:', e);
       }
     }
 
-        async function saveData(msg = 'Tersimpan! 🍵') {
-      // 1. Simpan ke memori HP/laptop dulu agar tampilan langsung berubah instan
+    function saveData(msg = 'Tersimpan! 🍵') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-      if (typeof renderAll === 'function') renderAll();
-
-      // Fungsi bantu aman untuk notifikasi agar tidak pernah bikin website macet
-      const kirimNotif = (teks) => {
-        if (typeof showToast === 'function' && teks) {
-          showToast(teks);
-        }
-      };
-
-      if (msg) kirimNotif('Menyimpan online... ⏳');
-
-      // 2. Kirim data ke Firebase dengan pengecekan status server
-      try {
-        const respon = await fetch(DATABASE_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(appData)
-        });
-
-        // Cek apakah Firebase menerima atau menolak data (misal: test mode habis)
-        if (!respon.ok) {
-          throw new Error(`Server menolak akses (Kode: ${respon.status})`);
-        }
-
-        if (msg) kirimNotif(msg);
-      } catch (e) {
-        console.error('Gagal menyimpan ke Firebase:', e);
-        if (msg) kirimNotif('Tersimpan lokal saja ⚠️');
-      }
+      renderAll();
+      if (msg) showToast(msg);
     }
 
-
+    function showToast(text) {
+      const t = document.getElementById('toast');
+      t.textContent = text;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
 
     // ================= NAVIGATION =================
     function switchPage(pageId, btnEl) {
